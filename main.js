@@ -22,7 +22,7 @@ function main(){
     let codescape = new Codescape(ast);
     let stack = [];
     console.log(codescape.root);
-    codescape.root.preorder((struct, ancestors)=>{
+    codescape.preorder((struct, ancestors)=>{
       if(struct.type === 'Structure'){
         // console.log(struct.node);
         console.log(struct.height);

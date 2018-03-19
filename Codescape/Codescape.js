@@ -85,4 +85,8 @@ module.exports = class Codescape{
     if(!this.stack.length) return {};
     return this.stack[this.stack.length-1];
   }
+
+  preorder(cb){
+    return this.root.preorder(cb);
+  }
 }
