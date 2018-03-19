@@ -1,3 +1,5 @@
+const EventEmitter = require('events');
+
 const WalkState = require('./WalkState');
 
 module.exports = class Walker{
@@ -5,10 +7,11 @@ module.exports = class Walker{
     this.ast = ast;
     this.states = null; //keeps track of the current state objects
     this.stateValues = null;
+    this.emitter = new EventEmitter();
   }
 
   next(){
-    let node;
+    let node, lastNode;
     if(this.states === null){
       // null state reference indicates object was just initialized
       this.states = [];
@@ -19,12 +22,13 @@ module.exports = class Walker{
     if(this.currentState === null){
       return null;
     }
+    lastNode = this.currentState.node;
     node = this.currentState.next();
     if(node !== null){
       this.pushState(node);
       return this.current;
     }else{
-      this.popState();
+      this.popState(lastNode);
       return this.next();
     }
     // switch(this.current.type){
@@ -73,13 +77,17 @@ module.exports = class Walker{
       case 'BlockStatement':
         return 'Block: {';
       case 'VariableDeclaration':
-        return 'VariableDeclaration, kind: '+node.kind;
+        return ''+node.kind;
       case 'VariableDeclarator':
-        return 'VariableDeclarator:'
+        return '='
       case 'BinaryExpression':
         return 'Binary: '+node.operator;
       case 'ReturnStatement':
         return 'return: ';
+      case 'AssignmentExpression':
+        return '=';
+      case 'ForStatement':
+        return 'for(;;)';
       default:
         return 'not defined for type: '+node.type;
     }
@@ -88,10 +96,20 @@ module.exports = class Walker{
   pushState(node){
     this.states.push(new WalkState(node));
     this.stateValues.push(this.currentValue);
+    this.emitter.emit('push', this.current);
   }
 
-  popState(){
+  popState(lastNode){
     this.states.pop();
-    this.stateValues.pop();
+    let popped = this.stateValues.pop();
+    this.emitter.emit('pop', lastNode);
+  }
+  
+  onPush(cb){
+    this.emitter.on('push', cb);
+  }
+
+  onPop(cb){
+    this.emitter.on('pop', cb);
   }
 }

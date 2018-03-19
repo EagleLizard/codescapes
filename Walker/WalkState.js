@@ -6,6 +6,10 @@ module.exports = class WalkState{
   }
 
   next(){
+    if(!this.children){
+      console.log(this.node);
+      throw new Error(`Missing children for ${this.node.type}`);
+    }
     if(!this.children.length || (this.idx > this.children.length-1)){
       return null; // null return indicates a 'done' state
     }
@@ -39,6 +43,14 @@ function getChildren(node){
     case 'BinaryExpression':
       return [node.left, node.right];
     case 'ReturnStatement':
+      return [node.argument];
+    case 'ArrayExpression':
+      return node.elements;
+    case 'AssignmentExpression':
+      return [node.left, node.right];
+    case 'ForStatement':
+      return [node.init, node.test, node.update, node.body];
+    case 'UpdateExpression':
       return [node.argument];
   }
 }
